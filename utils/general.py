@@ -388,12 +388,12 @@ def check_dataset(data, autodownload=True, kili_api_key=''):
         download(data, dir='../datasets', unzip=True, delete=False, curl=False, threads=1)
         data = next((Path('../datasets') / Path(data).stem).rglob('*.yaml'))
         extract_dir, autodownload = data.parent, False
-    
+
     # Read yaml (optional)
     if isinstance(data, (str, Path)):
         with open(data, errors='ignore') as f:
             data = yaml.safe_load(f)  # dictionary
-    
+
     download_kili(data, kili_api_key)
 
     # Parse yaml

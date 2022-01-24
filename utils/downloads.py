@@ -3,20 +3,19 @@
 Download utils
 """
 
-from nis import cat
 import os
 import platform
 import re
-import requests
 import subprocess
 import time
 import urllib
+from nis import cat
 from pathlib import Path
 from zipfile import ZipFile
 
-from kili.client import Kili
 import requests
 import torch
+from kili.client import Kili
 from tqdm import tqdm
 
 
@@ -170,15 +169,15 @@ def download_kili(data, kili_api_key):
     assets = []
     for skip in tqdm(range(0, total, first)):
         assets += kili.assets(
-            project_id=project_id, 
-            first=first, 
-            skip=skip, 
+            project_id=project_id,
+            first=first,
+            skip=skip,
             disable_tqdm=True,
             fields=[
-                'id', 
-                'content', 
-                'labels.createdAt', 
-                'labels.jsonResponse', 
+                'id',
+                'content',
+                'labels.createdAt',
+                'labels.jsonResponse',
                 'labels.labelType'])
     assets = [{
             **a,
@@ -221,4 +220,4 @@ def download_kili(data, kili_api_key):
                     handler.write(f'{category} {_x_} {_y_} {_w_} {_h_}\n')
 
 
-        
+
