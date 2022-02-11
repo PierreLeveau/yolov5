@@ -7,14 +7,14 @@
 #     └── kili  ← downloads here
 
 # Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
-path: ../datasets/kili/ckysuic0y0ldc0lvoeltld164 # dataset root dir with Kili project ID
+path: ../datasets/kili/ckzdzhh260ec00mub7gqjfetz # dataset root dir with Kili project ID
 train: images/train # train images (relative to 'path')
-val: images/train # val images (relative to 'path')
-test: # test images (optional)
+val: images/validation # val images (relative to 'path')
+test: images/test # test images (optional)
 
 # Classes
-nc: 2 # number of classes
-names: ["CAR", "PERSON"] # class names
+nc: 3 # number of classes
+names: ["PLASTIC_BAG", "PLASTIC_BOTTLE", "OTHER_PLASTIC_WASTE"] # class names
 
 # Download script/URL (optional)
 download:
