@@ -4,6 +4,7 @@ Download utils
 """
 
 from nis import cat
+import math
 import os
 import platform
 import re
@@ -160,6 +161,7 @@ def get_token(cookie="./cookie"):
 
 
 def download_kili(data, kili_api_key):
+    train_val_proportions = [0.8, 0.1]
     path = data.get('path', '')
     if '/kili/' not in path:
         return
@@ -188,37 +190,51 @@ def download_kili(data, kili_api_key):
             ][-1:],
         } for a in assets]
     assets = [a for a in assets if len(a['labels']) > 0]
-    train = data.get('train', '')
-    os.makedirs(os.path.join(path, train), exist_ok=True)
-    for asset in assets:
-        img_data = requests.get(asset['content'], headers={
-                'Authorization': f'X-API-Key: {kili_api_key}',
-            }).content
-        with open(os.path.join(path, train, asset['id'] + '.jpg'), 'wb') as handler:
-            handler.write(img_data)
-    names = data.get('names', [])
-    path_labels = os.path.join(path, re.sub('^images', 'labels', train))
-    os.makedirs(path_labels, exist_ok=True)
-    for asset in assets:
-        with open(os.path.join(path_labels, asset['id'] + '.txt'), 'w') as handler:
-            json_response = asset['labels'][0]['jsonResponse']
-            for job in json_response.values():
-                for annotation in job.get('annotations', []):
-                    name = annotation['categories'][0]['name']
-                    category = names.index(name)
-                    bounding_poly = annotation.get('boundingPoly', [])
-                    if len(bounding_poly) < 1:
-                        continue
-                    if 'normalizedVertices' not in bounding_poly[0]:
-                        continue
-                    normalized_vertices = bounding_poly[0]['normalizedVertices']
-                    x_s = [vertice['x'] for vertice in normalized_vertices]
-                    y_s = [vertice['y'] for vertice in normalized_vertices]
-                    x_min, y_min = min(x_s), min(y_s)
-                    x_max, y_max = max(x_s), max(y_s)
-                    _x_, _y_ = (x_max + x_min) / 2, (y_max + y_min) / 2
-                    _w_, _h_ = x_max - x_min, y_max - y_min
-                    handler.write(f'{category} {_x_} {_y_} {_w_} {_h_}\n')
 
+    n_train_assets = math.floor(len(assets) * train_val_proportions[0])
+    n_val_assets = math.floor(len(assets) * train_val_proportions[1])
 
-        
+    assets_splits = {
+        "train": assets[:n_train_assets],
+        "val": assets[n_train_assets : n_train_assets + n_val_assets],
+        "test": assets[n_train_assets + n_val_assets :],
+    }
+
+    for name_split, assets_split in assets_splits.items():
+    
+        path_split = os.path.join(path, data.get(name_split, ''))
+        print(path_split)
+        os.makedirs(path_split, exist_ok=True)
+        for asset in assets_split:
+            img_data = requests.get(asset['content'], headers={
+                    'Authorization': f'X-API-Key: {kili_api_key}',
+                }).content
+            with open(os.path.join(path_split, asset['id'] + '.jpg'), 'wb') as handler:
+                handler.write(img_data)
+        names = data.get('names', [])
+        path_labels = re.sub('/images/', '/labels/', path_split)
+        print(path_labels)
+        os.makedirs(path_labels, exist_ok=True)
+        for asset in assets_split:
+            with open(os.path.join(path_labels, asset['id'] + '.txt'), 'w') as handler:
+                json_response = asset['labels'][0]['jsonResponse']
+                for job in json_response.values():
+                    for annotation in job.get('annotations', []):
+                        name = annotation['categories'][0]['name']
+                        try:
+                            category = names.index(name)
+                        except ValueError:
+                            pass
+                        bounding_poly = annotation.get('boundingPoly', [])
+                        if len(bounding_poly) < 1:
+                            continue
+                        if 'normalizedVertices' not in bounding_poly[0]:
+                            continue
+                        normalized_vertices = bounding_poly[0]['normalizedVertices']
+                        x_s = [vertice['x'] for vertice in normalized_vertices]
+                        y_s = [vertice['y'] for vertice in normalized_vertices]
+                        x_min, y_min = min(x_s), min(y_s)
+                        x_max, y_max = max(x_s), max(y_s)
+                        _x_, _y_ = (x_max + x_min) / 2, (y_max + y_min) / 2
+                        _w_, _h_ = x_max - x_min, y_max - y_min
+                        handler.write(f'{category} {_x_} {_y_} {_w_} {_h_}\n')
