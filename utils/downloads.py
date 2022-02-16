@@ -206,11 +206,16 @@ def download_kili(data, kili_api_key):
         print(f"Downloading {name_split} dataset into {path_split}")
         os.makedirs(path_split, exist_ok=True)
         for asset in tqdm(assets_split):
+            tic = time.time()
             img_data = requests.get(asset['content'], headers={
                     'Authorization': f'X-API-Key: {kili_api_key}',
                 }).content
             with open(os.path.join(path_split, asset['id'] + '.jpg'), 'wb') as handler:
                 handler.write(img_data)
+            toc = time.time() - tic
+            throttling_per_call = 60.0 / 250
+            if toc < throttling_per_call:
+                time.sleep(throttling_per_call - toc)
         names = data.get('names', [])
         path_labels = re.sub('/images/', '/labels/', path_split)
         print(path_labels)
