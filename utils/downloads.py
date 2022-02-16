@@ -205,7 +205,7 @@ def download_kili(data, kili_api_key):
         path_split = os.path.join(path, data.get(name_split, ''))
         print(f"Downloading {name_split} dataset into {path_split}")
         os.makedirs(path_split, exist_ok=True)
-        for asset in assets_split:
+        for asset in tqdm(assets_split):
             img_data = requests.get(asset['content'], headers={
                     'Authorization': f'X-API-Key: {kili_api_key}',
                 }).content
@@ -215,7 +215,7 @@ def download_kili(data, kili_api_key):
         path_labels = re.sub('/images/', '/labels/', path_split)
         print(path_labels)
         os.makedirs(path_labels, exist_ok=True)
-        for asset in tqdm(assets_split):
+        for asset in assets_split:
             with open(os.path.join(path_labels, asset['id'] + '.txt'), 'w') as handler:
                 json_response = asset['labels'][0]['jsonResponse']
                 for job in json_response.values():
